@@ -1,0 +1,27 @@
+---
+
+restic_arch_lookup:
+  x86:
+    arch: 386
+  amd64:
+    arch: amd64
+  x86_64:
+    arch: amd64
+  arm64:
+    arch: arm
+  aarch64:
+    arch: arm
+  arm:
+    arch: arm
+  arm7:
+    arch: arm
+  armv7l:
+    arch: arm
+  armhf:
+    arch: arm
+
+restic_suffix: "{{ ansible_system | lower }}_{{ restic_arch_lookup[ansible_architecture].arch }}"
+restic_release_baseurl: https://github.com/restic/restic/releases/download
+restic_github_api: https://api.github.com/repos/restic/restic
+
+restic_link_type: "{{ 'hard' if restic_install_hard_links else 'symbolic' }}"

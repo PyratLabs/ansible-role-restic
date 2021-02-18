@@ -1,0 +1,21 @@
+---
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint -s .
+  ansible-lint --exclude molecule/
+platforms:
+  - name: restic
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    pre_build_image: ${MOLECULE_PREBUILT:-true}
+provisioner:
+  name: ansible
+  options:
+    verbose: true
+verifier:
+  name: ansible

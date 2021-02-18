@@ -1,0 +1,13 @@
+---
+
+- name: Get the latest release version of Restic
+  ansible.builtin.uri:
+    url: "{{ restic_github_api }}/releases/latest"
+    return_content: true
+    body_format: json
+  no_log: true
+  register: restic_get_latest_version
+
+- name: Ensure the restic_version variable is set
+  ansible.builtin.set_fact:
+    restic_version: "{{ restic_get_latest_version.json.tag_name | regex_replace('^v', '') }}"

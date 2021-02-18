@@ -1,0 +1,18 @@
+---
+
+- name: Get the binary path for Restic
+  ansible.builtin.set_fact:
+    restic_binary_path: "v{{ restic_version }}/restic_{{ restic_version }}_{{ restic_suffix }}.bz2"
+
+- name: Ensure Restic binary is downloaded
+  ansible.builtin.get_url:
+    url: "{{ restic_release_baseurl }}/{{ restic_binary_path }}"
+    dest: "/tmp/restic-{{ restic_version }}.bz2"
+    mode: 0600
+
+- name: Ensure Restic binary is decompressed
+  ansible.builtin.command: >
+    {{ restic_check_bunzip2_path.stdout_lines[0] }}
+    /tmp/restic-{{ restic_version }}.bz2
+  args:
+    creates: "/tmp/restic-{{ restic_version }}"

@@ -1,0 +1,9 @@
+---
+
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Ensure bzip2 is installed
+      ansible.builtin.package:
+        name: bzip2
+        state: present

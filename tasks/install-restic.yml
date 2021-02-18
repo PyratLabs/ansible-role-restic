@@ -1,0 +1,33 @@
+---
+
+- name: Ensure restic_install_dir exists
+  ansible.builtin.file:
+    path: "{{ restic_install_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Ensure existing Restic package is moved to keep an copy of the old version
+  ansible.builtin.command: >
+      mv {{ restic_install_dir }}/restic
+      {{ restic_install_dir }}/restic-{{ restic_check_existing_version.stdout_lines[0] }}
+  when:
+    - restic_check_existing.stat.islnk is defined
+    - not restic_check_existing.stat.islnk
+    - restic_check_existing_version.stdout_lines[0] != restic_version
+
+- name: Ensure Restic binary is copied to the installation directory
+  ansible.builtin.copy:
+    src: "/tmp/restic-{{ restic_version }}"
+    dest: "{{ restic_install_dir }}/restic-{{ restic_version }}"
+    remote_src: true
+    mode: 0755
+  when:
+    not restic_check_existing.stat.exists
+    or (restic_check_existing.stat.exists
+        and restic_check_existing_version.stdout_lines[0] != restic_version)
+
+- name: Ensure Restic package is {{ restic_link_type }} linked
+  ansible.builtin.file:
+    src: "{{ restic_install_dir }}/restic-{{ restic_version }}"
+    dest: "{{ restic_install_dir }}/restic"
+    state: "{{ 'hard' if restic_install_hard_links else 'link' }}"
