@@ -2,11 +2,16 @@
 
 - import_tasks: pre-checks.yml
 
-- import_tasks: get-version.yml
+- include_tasks: get-version.yml
   when: restic_version is not defined or not restic_version
 
-- import_tasks: download-restic.yml
+- include_tasks: download-restic.yml
+  when:
+    not restic_version_existing
+    or restic_version_existing != restic_version
 
-- import_tasks: install-restic.yml
+- include_tasks: install-restic.yml
+
+- include_tasks: configure-restic.yml
 
 - import_tasks: post-checks.yml

@@ -1,0 +1,39 @@
+[Unit]
+Description=Restic backup forget
+Documentation=https://restic.readthedocs.io/en/stable/index.html
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile={{ restic_config_dir }}/restic.env
+{% filter regex_replace('\s+', ' ') %}
+{% filter replace('\n', ' ') %}
+ExecStart={{ restic_install_dir }}/restic
+    forget
+    --prune
+    {% if restic_backup_opts | length > 0 %}
+        --option {{ restic_backup_opts | join(' --option ') }}
+    {% endif %}
+    {% if restic_keep_last is defined %}
+        --keep {{ restic_keep_last }}
+    {% endif %}
+    {% if restic_keep_hourly is defined %}
+        --keep-hourly {{ restic_keep_hourly }}
+    {% endif %}
+    {% if restic_keep_daily is defined %}
+        --keep-daily {{ restic_keep_daily }}
+    {% endif %}
+    {% if restic_keep_weekly is defined %}
+        --keep-weekly {{ restic_keep_weekly }}
+    {% endif %}
+    {% if restic_keep_monthly is defined %}
+        --keep-monthly {{ restic_keep_monthly }}
+    {% endif %}
+    {% if restic_keep_yearly is defined %}
+        --keep-yearly {{ restic_keep_yearly }}
+    {% endif %}
+    {% if restic_keep_within_duration is defined %}
+        --keep-within duration {{ restic_keep_within_duration }}
+    {% endif %}
+{% endfilter %}
+{% endfilter %}

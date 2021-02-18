@@ -1,2 +1,26 @@
 ---
-# handlers file for ansible-role-restic
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: "{{ restic_systemd_context }}"
+
+- name: restart restic-backup.timer
+  ansible.builtin.systemd:
+    name: restic-backup.timer
+    scope: "{{ restic_systemd_context }}"
+    state: restarted
+    enabled: true
+
+- name: restart restic-forget.timer
+  ansible.builtin.systemd:
+    name: restic-forget.timer
+    scope: "{{ restic_systemd_context }}"
+    state: restarted
+    enabled: true
+
+- name: run initial backup
+  ansible.builtin.systemd:
+    name: restic-backup.service
+    scope: "{{ restic_systemd_context }}"
+    state: started

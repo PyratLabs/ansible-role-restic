@@ -13,7 +13,7 @@ name: CI
 
 defaults:
   run:
-    working-directory: "xanmanning.k3s"
+    working-directory: "xanmanning.restic"
 
 jobs:
   molecule:
@@ -32,22 +32,16 @@ jobs:
             scenario: default
           - distro: ubuntu1804
             scenario: default
-          - distro: fedora31
-            scenario: nodeploy
-          - distro: fedora29
-            scenario: highavailabilitydb
-          - distro: fedora30
-            scenario: autodeploy
           - distro: debian9
-            scenario: highavailabilityetcd
+            scenario: default
           - distro: centos8
-            scenario: highavailabilityetcd
+            scenario: default
 
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v2
         with:
-          path: "xanmanning.k3s"
+          path: "xanmanning.restic"
 
       - name: Set up Python 3
         uses: actions/setup-python@v2

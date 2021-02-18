@@ -1,0 +1,9 @@
+[Unit]
+Description=Restic backup forget
+
+[Timer]
+OnCalendar={{ restic_backup_schedule }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

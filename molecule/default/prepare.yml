@@ -7,3 +7,4 @@
       ansible.builtin.package:
         name: bzip2
         state: present
+      become: true

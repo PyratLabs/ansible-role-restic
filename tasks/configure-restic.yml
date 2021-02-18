@@ -1,0 +1,106 @@
+---
+
+- name: Ensure Restic repository exists
+  ansible.builtin.file:
+    path: "{{ restic_repository }}"
+    state: directory
+    mode: 0755
+  when: not restic_repository_is_remote
+
+- name: Ensure configuration is set for "system" context
+  ansible.builtin.set_fact:
+    restic_systemd_unit_dir: /etc/systemd/system
+    restic_config_dir: /etc/restic
+    restic_remote_repo_init_log: /var/log/restic_remote_init.log
+  when: restic_systemd_context == "system"
+
+- name: Ensure Restic config dir and systemd context directory exists
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  loop:
+    - "{{ restic_systemd_unit_dir }}"
+    - "{{ restic_config_dir }}"
+
+- name: Ensure Restic config file is configured
+  ansible.builtin.template:
+    src: restic.{{ item }}.j2
+    dest: "{{ restic_config_dir }}/restic.{{ item }}"
+    mode: 0600
+  loop:
+    - env
+    - runenv
+
+- name: Ensure local Restic repository is initialised
+  ansible.builtin.shell: |
+    set -o pipefail
+    source {{ restic_config_dir }}/restic.runenv
+    {{ restic_install_dir }}/restic init
+  args:
+    creates: "{{ restic_repository }}/keys"
+    executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
+  when: not restic_repository_is_remote
+  notify:
+    - run initial backup
+
+- name: Ensure remote Restic repository is initialised
+  ansible.builtin.shell: |
+    set -o pipefail
+    source {{ restic_config_dir }}/restic.runenv
+    {{ restic_install_dir }}/restic init | tee {{ restic_remote_repo_init_log }}
+  args:
+    creates: "{{ restic_remote_repo_init_log }}"
+    executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
+  when: restic_repository_is_remote
+  notify:
+    - run initial backup
+
+- name: Ensure backup file list exists
+  ansible.builtin.template:
+    src: restic.files.j2
+    dest: "{{ restic_config_dir }}/restic.files"
+    mode: 0600
+  when: restic_files | length > 0
+
+- name: Ensure backup exclude file list exists
+  ansible.builtin.template:
+    src: restic.exclude.j2
+    dest: "{{ restic_config_dir }}/restic.exclude"
+    mode: 0600
+  when: restic_exclude_files | length > 0
+
+- block:
+
+  - name: Ensure backup service and timer unit are present
+    ansible.builtin.template:
+      src: restic-backup.{{ item }}.j2
+      dest: "{{ restic_systemd_unit_dir }}/restic-backup.{{ item }}"
+      mode: 0644
+    loop:
+      - service
+      - timer
+    notify:
+      - reload systemd
+      - restart restic-backup.timer
+
+  - name: Ensure backup forget service and timer unit are present
+    ansible.builtin.template:
+      src: restic-forget.{{ item }}.j2
+      dest: "{{ restic_systemd_unit_dir }}/restic-forget.{{ item }}"
+      mode: 0644
+    when: (restic_keep_last is defined
+           or restic_keep_hourly is defined
+           or restic_keep_daily is defined
+           or restic_keep_weekly is defined
+           or restic_keep_monthly is defined
+           or restic_keep_yearly is defined
+           or restic_keep_within_duration is defined)
+    loop:
+      - service
+      - timer
+    notify:
+      - reload systemd
+      - restart restic-forget.timer
+
+  when: restic_files | length > 0

@@ -3,6 +3,36 @@
 # Use a specific version of Restic, eg. `0.11.0`. Specify `false` for latest.
 restic_version: false
 
+# Installation directory for Restic.
 restic_install_dir: "{{ ansible_user_dir }}/bin"
 
+# Install using hard links rather than symbolic links.
 restic_install_hard_links: false
+
+# Install systemd timer units to system context.
+restic_systemd_system_context: false
+
+# Dictionary of environment vars to pass to Restic. See examples.
+restic_env_vars: {}
+# restic_env_vars:
+#   AWS_ACCESS_KEY_ID: AKxxxxxxxxxxxxxxxxDF
+#   AWS_SECRET_ACCESS_KEY: fJz/xxxxxxxxxxxxxxxxxxx23
+
+# Schedule for running backups, see `OnCalendar` for systemd.timer.
+# https://www.freedesktop.org/software/systemd/man/systemd.timer.html
+restic_backup_schedule: "*-*-* 0:00:00"
+
+# Tag to apply to backup.
+restic_backup_tag: automatic
+
+# List of paths to backup.
+restic_files: []
+
+# List of paths to exclude from backup.
+restic_exclude_files: []
+
+# List of options for your chosen backup repository.
+restic_backup_opts: []
+
+# Value for `RandomizedDelaySec`.
+restic_systemd_randomised_delay: 0

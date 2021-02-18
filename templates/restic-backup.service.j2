@@ -1,0 +1,22 @@
+[Unit]
+Description=Restic backup
+Documentation=https://restic.readthedocs.io/en/stable/index.html
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile={{ restic_config_dir }}/restic.env
+{% filter regex_replace('\s+', ' ') %}
+{% filter replace('\n', ' ') %}
+ExecStart={{ restic_install_dir }}/restic
+    backup
+    {% if restic_backup_opts | length > 0 %}
+        --option {{ restic_backup_opts | join(' --option ') }}
+    {% endif %}
+    --files-from={{ restic_config_dir }}/restic.files
+    {% if restic_exclude_files | length > 0 %}
+        --exclude-file={{ restic_config_dir }}/restic.exclude
+    {% endif %}
+    --tag={{ restic_backup_tag }}
+{% endfilter %}
+{% endfilter %}

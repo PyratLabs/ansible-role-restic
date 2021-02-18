@@ -26,3 +26,26 @@
   changed_when: false
   register: restic_check_existing_version
   when: restic_check_existing.stat.exists
+
+- name: Ensure Restic existing version is set as a fact
+  ansible.builtin.set_fact:
+    restic_version_existing: "{{ restic_check_existing_version.stdout }}"
+  when: restic_check_existing.stat.exists
+
+- name: Check Restic role configuration
+  ansible.builtin.assert:
+    that:
+      - restic_repository is defined
+      - restic_repository is string
+      - restic_repository_password is defined
+      - restic_repository_password is string
+      - restic_repository_password | string | length > 8
+      - restic_systemd_context is defined
+      - restic_systemd_context in ['user', 'system']
+
+- name: Ensure restic_repository_is_remote is set if repository is remote
+  ansible.builtin.set_fact:
+    restic_repository_is_remote: true
+  when:
+    - restic_repository is search(':')
+    - restic_repository.split(':')[0] | lower in restic_remote_protocols

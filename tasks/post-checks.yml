@@ -9,7 +9,8 @@
   ansible.builtin.assert:
     that:
       - restic_check_installed.stat.exists
-      - restic_check_installed.stat.islnk
+      - (not restic_install_hard_links and restic_check_installed.stat.islnk)
+        or (restic_install_hard_links and not restic_check_installed.stat.islnk)
     fail_msg: Restic was not installed as expected, it is likely something went wrong.
     success_msg: Restic has been installed as expected.
 

@@ -2,5 +2,18 @@
 
 - name: Converge
   hosts: all
+  become: true
   roles:
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+      vars:
+        restic_install_hard_links: true
+        restic_install_dir: /usr/bin
+        restic_repository: /root/backup
+        restic_repository_password: S0m3th?nGB4d
+        restic_systemd_system_context: true
+        restic_files:
+          - /root
+          - /home
+          - /etc
+        restic_exclude_files:
+          - /root/backup

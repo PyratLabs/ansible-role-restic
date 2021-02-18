@@ -25,3 +25,18 @@ restic_release_baseurl: https://github.com/restic/restic/releases/download
 restic_github_api: https://api.github.com/repos/restic/restic
 
 restic_link_type: "{{ 'hard' if restic_install_hard_links else 'symbolic' }}"
+restic_version_existing: false
+restic_repository_is_remote: false
+restic_systemd_context: "{{ 'system' if restic_systemd_system_context else 'user' }}"
+restic_systemd_unit_dir: "{{ ansible_user_dir }}/.config/systemd/user"
+restic_remote_repo_init_log: "{{ ansible_user_dir }}/.restic_remote_init.log"
+restic_config_dir: "{{ ansible_user_dir }}/.config/restic"
+restic_remote_protocols:
+  - azure
+  - b2
+  - gs
+  - rclone
+  - rest
+  - s3
+  - sftp
+  - swift
