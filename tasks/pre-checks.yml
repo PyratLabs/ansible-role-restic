@@ -5,12 +5,14 @@
   register: restic_check_bash_path
   failed_when: restic_check_bash_path.rc > 0
   changed_when: false
+  check_mode: false
 
 - name: Check where bunzip2 is installed
   ansible.builtin.command: which bunzip2
   register: restic_check_bunzip2_path
   failed_when: restic_check_bunzip2_path.rc > 0
   changed_when: false
+  check_mode: false
 
 - name: Check for existing Restic binary
   ansible.builtin.stat:

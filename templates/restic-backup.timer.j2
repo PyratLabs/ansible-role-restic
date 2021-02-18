@@ -3,6 +3,7 @@ Description=Restic backup
 
 [Timer]
 OnCalendar={{ restic_backup_schedule }}
+RandomizedDelaySec={{ restic_systemd_randomised_delay }}
 Persistent=true
 
 [Install]
