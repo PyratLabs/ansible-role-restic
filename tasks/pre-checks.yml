@@ -26,6 +26,7 @@
   args:
     executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
   changed_when: false
+  check_mode: false
   register: restic_check_existing_version
   when: restic_check_existing.stat.exists
 
