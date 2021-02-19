@@ -33,28 +33,42 @@ my spare time so I cannot promise a speedy fix delivery.
 
 ## Role Variables
 
-| Variable                          | Description                                                                 | Default value   |
-|-----------------------------------|-----------------------------------------------------------------------------|-----------------|
-| `restic_version`                  | Use a specific version of Restic, eg. `0.11.0`. Specify `false` for latest. | `false`         |
-| `restic_install_dir`              | Installation directory for Restic.                                          | `$HOME/bin`     |
-| `restic_install_hard_links`       | Install using hard links rather than symbolic links.                        | `false`         |
-| `restic_systemd_system_context`   | Install systemd timer units to system context.                              | `false`         |
-| `restic_repository`               | Restic repository path or URI.                                              | NULL            |
-| `restic_repository_password`      | Restic repository password.                                                 | NULL            |
-| `restic_env_vars`                 | Dictionary of environment vars to pass to Restic. See examples.             | `{}`            |
-| `restic_backup_schedule`          | Schedule for running backups, see `OnCalendar` for systemd.timer.           | `*-*-* 0:00:00` |
-| `restic_systemd_randomised_delay` | Value for `RandomizedDelaySec`.                                             | 0               |
-| `restic_backup_tag`               | Tag to apply to backup.                                                     | "automatic"     |
-| `restic_files`                    | List of paths to backup.                                                    | []              |
-| `restic_exclude_files`            | List of paths to exclude from backup.                                       | []              |
-| `restic_backup_opts`              | List of options for your chosen backup repository.                          | []              |
-| `restic_keep_last`                | Keep the last 'n' backups.                                                  | NULL            |
-| `restic_keep_hourly`              | Keep the last 'n' hours of backups.                                         | NULL            |
-| `restic_keep_daily`               | Keep the last 'n' days of backups.                                          | NULL            |
-| `restic_keep_weekly`              | Keep the last 'n' weeks of backups.                                         | NULL            |
-| `restic_keep_monthly`             | Keep the last 'n' months of backups.                                        | NULL            |
-| `restic_keep_yearly`              | Keep the last 'n' years of backups.                                         | NULL            |
-| `restic_keep_within_duration`     | Keep snapshots within this duration. eg. `2y5m7d3h`                         | NULL            |
+| Variable                          | Description                                                                 | Default value    |
+|-----------------------------------|-----------------------------------------------------------------------------|------------------|
+| `restic_version`                  | Use a specific version of Restic, eg. `0.11.0`. Specify `false` for latest. | `false`          |
+| `restic_install_dir`              | Installation directory for Restic.                                          | `$HOME/bin`      |
+| `restic_install_hard_links`       | Install using hard links rather than symbolic links.                        | `false`          |
+| `restic_systemd_system_context`   | Install systemd timer units to system context.                              | `false`          |
+| `restic_repository`               | Restic repository path or URI.                                              | NULL             |
+| `restic_repository_password`      | Restic repository password.                                                 | NULL             |
+| `restic_env_vars`                 | Dictionary of environment vars to pass to Restic. See examples.             | `{}`             |
+| `restic_backup_schedule`          | Schedule for running backups, see `OnCalendar` for systemd.timer.           | `*-*-* 00:00:00` |
+| `restic_forget_schedule`          | Schedule for forgetting backups`*`, see `OnCalendar` for systemd.timer.     | `*-*-* 03:00:00` |
+| `restic_systemd_randomised_delay` | Value for `RandomizedDelaySec`.                                             | 0                |
+| `restic_backup_tag`               | Tag to apply to backup.                                                     | "automatic"      |
+| `restic_files`                    | List of paths to backup.                                                    | []               |
+| `restic_exclude_files`            | List of paths to exclude from backup.                                       | []               |
+| `restic_backup_opts`              | List of options for your chosen backup repository.                          | []               |
+| `restic_keep_last`                | Keep the last 'n' backups.                                                  | NULL             |
+| `restic_keep_hourly`              | Keep the last 'n' hours of backups.                                         | NULL             |
+| `restic_keep_daily`               | Keep the last 'n' days of backups.                                          | NULL             |
+| `restic_keep_weekly`              | Keep the last 'n' weeks of backups.                                         | NULL             |
+| `restic_keep_monthly`             | Keep the last 'n' months of backups.                                        | NULL             |
+| `restic_keep_yearly`              | Keep the last 'n' years of backups.                                         | NULL             |
+| `restic_keep_within_duration`     | Keep snapshots within this duration. eg. `2y5m7d3h`                         | NULL             |
+
+### `*` Forgetting backups
+
+Backup snapshots will only be "forgotten" when one or more of the following
+variables is defined:
+
+  - `restic_keep_last`
+  - `restic_keep_hourly`
+  - `restic_keep_daily`
+  - `restic_keep_weekly`
+  - `restic_keep_monthly`
+  - `restic_keep_yearly`
+  - `restic_keep_within_duration`
 
 ## Dependencies
 

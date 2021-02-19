@@ -20,7 +20,11 @@ restic_env_vars: {}
 
 # Schedule for running backups, see `OnCalendar` for systemd.timer.
 # https://www.freedesktop.org/software/systemd/man/systemd.timer.html
-restic_backup_schedule: "*-*-* 0:00:00"
+restic_backup_schedule: "*-*-* 00:00:00"
+
+# Schedule for forgetting backups, see `OnCalendar` for systemd.timer.
+# https://www.freedesktop.org/software/systemd/man/systemd.timer.html
+restic_forget_schedule: "*-*-* 00:00:00"
 
 # Tag to apply to backup.
 restic_backup_tag: automatic

@@ -2,7 +2,7 @@
 Description=Restic backup forget
 
 [Timer]
-OnCalendar={{ restic_backup_schedule }}
+OnCalendar={{ restic_forget_schedule }}
 RandomizedDelaySec={{ restic_systemd_randomised_delay }}
 Persistent=true
 
