@@ -14,8 +14,18 @@
         name: cronie
         state: present
       become: true
+      when: ansible_os_family | lower == "redhat"
 
-    - name: Ensure normal user exists
+    - name: Ensure cron is installed
+      ansible.builtin.package:
+        name: cron
+        state: present
+      become: true
+      when:
+        - ansible_os_family | lower == "debian"
+        - ansible_distribution | lower != "ubuntu"
+
+    - name: Ensure restic user exists
       ansible.builtin.user:
         name: restic
         state: present

@@ -14,3 +14,13 @@
         name: cronie
         state: present
       become: true
+      when: ansible_os_family | lower == "redhat"
+
+    - name: Ensure cron is installed
+      ansible.builtin.package:
+        name: cron
+        state: present
+      become: true
+      when:
+        - ansible_os_family | lower == "debian"
+        - ansible_distribution | lower != "ubuntu"
