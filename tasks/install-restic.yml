@@ -10,6 +10,8 @@
   ansible.builtin.command: >
       mv {{ restic_install_dir }}/restic
       {{ restic_install_dir }}/restic-{{ restic_check_existing_version.stdout_lines[0] }}
+  args:
+    creates: "{{ restic_install_dir }}/restic-{{ restic_check_existing_version.stdout_lines[0] }}"
   when:
     - restic_check_existing.stat.islnk is defined
     - not restic_check_existing.stat.islnk

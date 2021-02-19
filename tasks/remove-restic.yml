@@ -1,0 +1,37 @@
+---
+
+- name: Ensure Restic links and config files are removed
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ restic_install_dir }}/restic"
+    - "{{ restic_config_dir }}/restic.files"
+    - "{{ restic_config_dir }}/restic.exclude"
+    - "{{ restic_config_dir }}/restic.env"
+    - "{{ restic_config_dir }}/restic.systemd.env"
+
+- name: Ensure systemd unit files are removed
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ restic_systemd_unit_dir }}/restic-backup.timer"
+    - "{{ restic_systemd_unit_dir }}/restic-backup.service"
+    - "{{ restic_systemd_unit_dir }}/restic-forget.timer"
+    - "{{ restic_systemd_unit_dir }}/restic-forget.service"
+  notify:
+    - reload systemd
+
+- name: "Check for the Restic binary in {{ restic_install_dir }}"
+  ansible.builtin.find:
+    paths: "{{ restic_install_dir }}"
+    patterns: "restic-*"
+    file_type: file
+  register: restic_check_restic_binaries
+
+- name: Ensure Restic binaries have been removed
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ restic_check_restic_binaries.files }}"

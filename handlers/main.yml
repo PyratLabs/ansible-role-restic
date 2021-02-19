@@ -20,7 +20,22 @@
     enabled: true
 
 - name: run initial backup
-  ansible.builtin.systemd:
-    name: restic-backup.service
-    scope: "{{ restic_systemd_context }}"
-    state: started
+  ansible.builtin.shell: |
+    set -o pipefail
+    source {{ restic_config_dir }}/restic.env
+    {% filter regex_replace('\s+', ' ') %}
+    {% filter replace('\n', ' ') %}
+    {{ restic_install_dir }}/restic
+        backup
+        {% if restic_backup_opts | length > 0 %}
+            --option {{ restic_backup_opts | join(' --option ') }}
+        {% endif %}
+        --files-from={{ restic_config_dir }}/restic.files
+        {% if restic_exclude_files | length > 0 %}
+            --exclude-file={{ restic_config_dir }}/restic.exclude
+        {% endif %}
+        --tag=seed
+    {% endfilter %}
+    {% endfilter %}
+  args:
+    executable: "{{ restic_check_bash_path.stdout_lines[0] }}"

@@ -7,6 +7,8 @@
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
       vars:
         restic_state: present
+        restic_scheduler: systemd
+        restic_systemd_system_context: true
         restic_install_dir: /usr/local/sbin
         restic_repository: /backup
         restic_repository_password: S0m3th?nGB4d

@@ -6,6 +6,7 @@
     return_content: true
     body_format: json
   no_log: true
+  check_mode: false
   register: restic_get_latest_version
 
 - name: Ensure the restic_version variable is set

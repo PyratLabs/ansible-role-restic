@@ -31,6 +31,7 @@ restic_systemd_context: "{{ 'system' if restic_systemd_system_context else 'user
 restic_systemd_unit_dir: "{{ ansible_user_dir }}/.config/systemd/user"
 restic_remote_repo_init_log: "{{ ansible_user_dir }}/.restic_remote_init.log"
 restic_config_dir: "{{ ansible_user_dir }}/.config/restic"
+restic_cron_log_dir: "{{ restic_config_dir }}/log"
 restic_remote_protocols:
   - azure
   - b2

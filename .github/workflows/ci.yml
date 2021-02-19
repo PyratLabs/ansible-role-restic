@@ -23,19 +23,12 @@ jobs:
       matrix:
         include:
           - distro: debian10
-            scenario: default
           - distro: ubuntu2004
-            scenario: default
           - distro: amazonlinux2
-            scenario: default
           - distro: centos7
-            scenario: default
           - distro: ubuntu1804
-            scenario: default
           - distro: debian9
-            scenario: default
           - distro: centos8
-            scenario: default
 
     steps:
       - name: Checkout codebase
@@ -52,7 +45,7 @@ jobs:
         run: pip3 install -r molecule/requirements.txt
 
       - name: Run Molecule tests
-        run: molecule test --scenario-name "${{ matrix.scenario }}"
+        run: molecule test --all
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'

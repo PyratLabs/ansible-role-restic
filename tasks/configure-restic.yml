@@ -5,23 +5,40 @@
     path: "{{ restic_repository }}"
     state: directory
     mode: 0755
-  when: not restic_repository_is_remote
+  when:
+    - not restic_repository_is_remote
+    - restic_state == "present"
 
 - name: Ensure configuration is set for "system" context
   ansible.builtin.set_fact:
     restic_systemd_unit_dir: /etc/systemd/system
     restic_config_dir: /etc/restic
     restic_remote_repo_init_log: /var/log/restic_remote_init.log
-  when: restic_systemd_context == "system"
+  when:
+    - restic_systemd_context == "system"
+    - restic_scheduler == "systemd"
+    - ansible_service_mgr == "systemd"
+
+- name: Ensure cron log directory is set for root user
+  ansible.builtin.set_fact:
+    restic_cron_log_dir: /var/log/restic
+    restic_config_dir: /etc/restic
+    restic_scheduler: cron
+  when:
+    - (restic_scheduler == "cron" or ansible_service_mgr != "systemd")
+    - ansible_user_uid == 0
 
 - name: Ensure Restic config dir and systemd context directory exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: 0755
+  when:
+    - restic_state == "present"
   loop:
     - "{{ restic_systemd_unit_dir }}"
     - "{{ restic_config_dir }}"
+    - "{{ restic_cron_log_dir }}"
 
 - name: Ensure Restic config file is configured
   ansible.builtin.template:
@@ -30,29 +47,35 @@
     mode: 0600
   loop:
     - env
-    - runenv
+    - systemd.env
+  when:
+    - restic_state == "present"
 
 - name: Ensure local Restic repository is initialised
   ansible.builtin.shell: |
     set -o pipefail
-    source {{ restic_config_dir }}/restic.runenv
+    source {{ restic_config_dir }}/restic.env
     {{ restic_install_dir }}/restic init
   args:
     creates: "{{ restic_repository }}/keys"
     executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
-  when: not restic_repository_is_remote
+  when:
+    - not restic_repository_is_remote
+    - restic_state == "present"
   notify:
     - run initial backup
 
 - name: Ensure remote Restic repository is initialised
   ansible.builtin.shell: |
     set -o pipefail
-    source {{ restic_config_dir }}/restic.runenv
+    source {{ restic_config_dir }}/restic.env
     {{ restic_install_dir }}/restic init | tee {{ restic_remote_repo_init_log }}
   args:
     creates: "{{ restic_remote_repo_init_log }}"
     executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
-  when: restic_repository_is_remote
+  when:
+    - restic_repository_is_remote
+    - restic_state == "present"
   notify:
     - run initial backup
 
@@ -61,14 +84,108 @@
     src: restic.files.j2
     dest: "{{ restic_config_dir }}/restic.files"
     mode: 0600
-  when: restic_files | length > 0
+  when:
+    - restic_files | length > 0
+    - restic_state == "present"
 
 - name: Ensure backup exclude file list exists
   ansible.builtin.template:
     src: restic.exclude.j2
     dest: "{{ restic_config_dir }}/restic.exclude"
     mode: 0600
-  when: restic_exclude_files | length > 0
+  when:
+    - restic_exclude_files | length > 0
+    - restic_state == "present"
+
+- block:
+
+  - name: Ensure backup crontab is present
+    ansible.builtin.cron:
+      name: Restic backup
+      cron_file: "{{ 'restic-backup' if ansible_user_uid == 0 else omit }}"
+      job: |
+        {% filter regex_replace('\s+', ' ') %}
+        {% filter replace('\n', ' ') %}
+        source {{ restic_config_dir }}/restic.env &&
+        {{ restic_install_dir }}/restic
+            backup
+            {% if restic_backup_opts | length > 0 %}
+                --option {{ restic_backup_opts | join(' --option ') }}
+            {% endif %}
+            --files-from={{ restic_config_dir }}/restic.files
+            {% if restic_exclude_files | length > 0 %}
+                --exclude-file={{ restic_config_dir }}/restic.exclude
+            {% endif %}
+            --tag={{ restic_backup_tag }}
+            2>>{{ restic_cron_log_dir }}/restic.err
+            >>{{ restic_cron_log_dir }}/restic.log
+        {% endfilter %}
+        {% endfilter %}
+      state: "{{ restic_state }}"
+      user: "{{ ansible_user_id }}"
+      minute: "{{ restic_backup_cron_schedule.split(' ')[0] }}"
+      hour: "{{ restic_backup_cron_schedule.split(' ')[1] }}"
+      day: "{{ restic_backup_cron_schedule.split(' ')[2] }}"
+      month: "{{ restic_backup_cron_schedule.split(' ')[3] }}"
+      weekday: "{{ restic_backup_cron_schedule.split(' ')[4] }}"
+
+  - name: Ensure backup forget crontab is present
+    ansible.builtin.cron:
+      name: Restic forget
+      cron_file: "{{ 'restic-forget' if ansible_user_uid == 0 else omit }}"
+      job: |
+        {% filter regex_replace('\s+', ' ') %}
+        {% filter replace('\n', ' ') %}
+        source {{ restic_config_dir }}/restic.env &&
+        {{ restic_install_dir }}/restic
+            forget
+            --prune
+            {% if restic_backup_opts | length > 0 %}
+                --option {{ restic_backup_opts | join(' --option ') }}
+            {% endif %}
+            {% if restic_keep_last is defined %}
+                --keep {{ restic_keep_last }}
+            {% endif %}
+            {% if restic_keep_hourly is defined %}
+                --keep-hourly {{ restic_keep_hourly }}
+            {% endif %}
+            {% if restic_keep_daily is defined %}
+                --keep-daily {{ restic_keep_daily }}
+            {% endif %}
+            {% if restic_keep_weekly is defined %}
+                --keep-weekly {{ restic_keep_weekly }}
+            {% endif %}
+            {% if restic_keep_monthly is defined %}
+                --keep-monthly {{ restic_keep_monthly }}
+            {% endif %}
+            {% if restic_keep_yearly is defined %}
+                --keep-yearly {{ restic_keep_yearly }}
+            {% endif %}
+            {% if restic_keep_within_duration is defined %}
+                --keep-within duration {{ restic_keep_within_duration }}
+            {% endif %}
+            2>>{{ restic_cron_log_dir }}/restic.err
+            >>{{ restic_cron_log_dir }}/restic.log
+        {% endfilter %}
+        {% endfilter %}
+      state: "{{ restic_state }}"
+      user: "{{ ansible_user_id }}"
+      minute: "{{ restic_forget_cron_schedule.split(' ')[0] }}"
+      hour: "{{ restic_forget_cron_schedule.split(' ')[1] }}"
+      day: "{{ restic_forget_cron_schedule.split(' ')[2] }}"
+      month: "{{ restic_forget_cron_schedule.split(' ')[3] }}"
+      weekday: "{{ restic_forget_cron_schedule.split(' ')[4] }}"
+    when: (restic_keep_last is defined
+           or restic_keep_hourly is defined
+           or restic_keep_daily is defined
+           or restic_keep_weekly is defined
+           or restic_keep_monthly is defined
+           or restic_keep_yearly is defined
+           or restic_keep_within_duration is defined)
+
+  when:
+    - restic_files | length > 0
+    - (restic_scheduler == "cron" or ansible_service_mgr != "systemd")
 
 - block:
 
@@ -103,4 +220,8 @@
       - reload systemd
       - restart restic-forget.timer
 
-  when: restic_files | length > 0
+  when:
+    - restic_files | length > 0
+    - restic_state == "present"
+    - restic_scheduler == "systemd"
+    - ansible_service_mgr == "systemd"

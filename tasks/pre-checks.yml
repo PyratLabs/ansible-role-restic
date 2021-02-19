@@ -7,6 +7,14 @@
   changed_when: false
   check_mode: false
 
+- name: Check where crontab is installed
+  ansible.builtin.command: which crontab
+  register: restic_check_crontab_path
+  failed_when: restic_check_crontab_path.rc > 0
+  changed_when: false
+  check_mode: false
+  when: restic_scheduler == "cron"
+
 - name: Check where bunzip2 is installed
   ansible.builtin.command: which bunzip2
   register: restic_check_bunzip2_path
@@ -38,6 +46,8 @@
 - name: Check Restic role configuration
   ansible.builtin.assert:
     that:
+      - restic_state in ['present', 'absent']
+      - restic_scheduler in ['cron', 'systemd']
       - restic_repository is defined
       - restic_repository is string
       - restic_repository_password is defined

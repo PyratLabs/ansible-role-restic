@@ -13,6 +13,17 @@
         or (restic_install_hard_links and not restic_check_installed.stat.islnk)
     fail_msg: Restic was not installed as expected, it is likely something went wrong.
     success_msg: Restic has been installed as expected.
+  when:
+    - restic_state == "present"
+
+- name: Fail play if Restic is not removed as expected
+  ansible.builtin.assert:
+    that:
+      - not restic_check_installed.stat.exists
+    fail_msg: Restic was not removed as expected, it is likely something went wrong.
+    success_msg: Restic has been removed as expected.
+  when:
+    - restic_state == "absent"
 
 - name: Check the Restic binary version matches the expected version
   ansible.builtin.shell: |
@@ -22,6 +33,7 @@
     executable: "{{ restic_check_bash_path.stdout_lines[0] }}"
   changed_when: false
   failed_when: false
+  check_mode: false
   register: restic_check_installed_version
 
 - name: Fail play if Restic is not the expected version
@@ -30,3 +42,5 @@
       - restic_check_installed_version.stdout_lines[0] == restic_version
     fail_msg: Installed Restic version is not as expected, it is likely something went wrong.
     success_msg: Installed Restic version is as expected.
+  when:
+    - restic_state == "present"

@@ -14,3 +14,8 @@
         name: cronie
         state: present
       become: true
+
+    - name: Ensure normal user exists
+      ansible.builtin.user:
+        name: restic
+        state: present
