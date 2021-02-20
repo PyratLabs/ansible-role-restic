@@ -99,14 +99,14 @@
 
 - block:
 
-  - name: Ensure backup crontab is present
+  - name: Ensure backup crontab is {{ restic_state }}
     ansible.builtin.cron:
       name: Restic backup
       cron_file: "{{ 'restic-backup' if ansible_user_uid == 0 else omit }}"
       job: |
         {% filter regex_replace('\s+', ' ') %}
         {% filter replace('\n', ' ') %}
-        source {{ restic_config_dir }}/restic.env &&
+        . {{ restic_config_dir }}/restic.env ;
         {{ restic_install_dir }}/restic
             backup
             {% if restic_backup_opts | length > 0 %}
@@ -129,14 +129,14 @@
       month: "{{ restic_backup_cron_schedule.split(' ')[3] }}"
       weekday: "{{ restic_backup_cron_schedule.split(' ')[4] }}"
 
-  - name: Ensure backup forget crontab is present
+  - name: Ensure backup forget crontab is {{ restic_state }}
     ansible.builtin.cron:
       name: Restic forget
       cron_file: "{{ 'restic-forget' if ansible_user_uid == 0 else omit }}"
       job: |
         {% filter regex_replace('\s+', ' ') %}
         {% filter replace('\n', ' ') %}
-        source {{ restic_config_dir }}/restic.env &&
+        . {{ restic_config_dir }}/restic.env ;
         {{ restic_install_dir }}/restic
             forget
             --prune
